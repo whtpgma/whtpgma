@@ -2,386 +2,272 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>안전한 물놀이 수칙 방탈출</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>퀴즈 게임</title>
+    
+    <!-- CSS 스타일: HTML 파일 내부에 통합 -->
     <style>
-        /* 기본 스타일 */
-        body, html {
+        /* 기본 스타일 초기화 */
+        html, body {
             margin: 0;
             padding: 0;
-            width: 100%;
             height: 100%;
-            overflow: hidden;
-            font-family: 'Malgun Gothic', sans-serif;
-            background-color: #000;
+            overflow: hidden; /* 페이지 스크롤바가 생기지 않도록 함 */
+            font-family: 'Malgun Gothic', sans-serif; /* 가독성 좋은 폰트 적용 */
         }
 
-        /* 게임 컨테이너 */
+        /* 게임 배경 및 전체 컨테이너 */
         #game-container {
-            position: relative;
             width: 100%;
-            max-width: 1280px; /* 이미지 원본 비율에 맞춘 최대 너비 */
-            max-height: 853px; /* 이미지 원본 비율에 맞춘 최대 높이 */
-            margin: auto;
-            top: 50%;
-            transform: translateY(-50%);
+            height: 100vh; /* 화면 전체 높이를 차지 */
+            background-image: url('https://i.postimg.cc/Y0VKZvQG/Whisk-5f8d090bcf.jpg');
+            background-size: cover; /* 이미지가 컨테이너를 가득 채우도록 함 */
+            background-position: center; /* 이미지를 중앙에 위치시킴 */
+            position: relative; /* 자식 요소(오브젝트)의 위치 기준점 */
         }
 
-        #game-container img {
-            width: 100%;
-            display: block;
+        /* 클릭 가능한 오브젝트들의 공통 스타일 */
+        .clickable-object {
+            position: absolute; /* 절대 좌표로 위치 지정 */
+            cursor: pointer; /* 마우스 올리면 손가락 모양으로 변경 */
+            border-radius: 10px; /* 모서리를 약간 둥글게 처리하여 보기 좋게 함 */
+            
+            /* [수정] 부드러운 효과를 위한 transition 속성 추가 */
+            transition: background-color 0.3s ease;
         }
 
-        /* 클릭 가능 오브젝트 공통 스타일 */
-        .object {
-            position: absolute;
-            background-color: rgba(255, 255, 0, 0); /* 개발 시 확인을 위해 색상 사용, 최종본은 0으로 설정 */
-            cursor: pointer;
-            transition: background-color 0.3s;
-        }
-        .object:hover {
-             background-color: rgba(255, 255, 0, 0.3);
+        /* [추가] 오브젝트 위에 마우스를 올렸을 때의 스타일 */
+        .clickable-object:hover {
+            /* 반투명한 흰색 배경을 추가하여 영역을 시각적으로 표시 */
+            background-color: rgba(255, 255, 255, 0.25);
+            border: 2px solid rgba(255, 255, 255, 0.5); /* 좀 더 명확한 표시를 위해 테두리 추가 */
         }
 
-        /* 오브젝트 위치 설정 (top, left, width, height를 %로 설정하여 반응형 대응) */
-        #monitor { top: 43%; left: 16%; width: 15%; height: 18%; }
-        #speaker { top: 12%; left: 24%; width: 5%; height: 9%; }
-        #clock { top: 15%; left: 78%; width: 7%; height: 12%; }
-        #pencil-case { top: 62%; left: 81%; width: 10%; height: 10%; }
-        #door { top: 25%; left: 3%; width: 12%; height: 50%; }
 
-        /* 모달 공통 스타일 */
+        /* 오브젝트 1: "computer programming" 책 위치 및 크기 */
+        #obj1 {
+            top: 60%;
+            left: 25%;
+            width: 15%;
+            height: 10%;
+        }
+
+        /* 오브젝트 2: "python" 칠판 위치 및 크기 */
+        #obj2 {
+            top: 30%;
+            left: 68%;
+            width: 22%;
+            height: 25%;
+        }
+
+        /* 오브젝트 3: "AI" 책상 위치 및 크기 */
+        #obj3 {
+            top: 55%;
+            left: 55%;
+            width: 30%;
+            height: 25%;
+        }
+        
+        /* 퀴즈 모달 창의 배경 (어둡게 처리) */
         .modal {
-            display: none;
-            position: fixed;
-            z-index: 100;
+            position: fixed; /* 화면에 고정 */
+            z-index: 100; /* 다른 모든 요소 위에 오도록 설정 */
             left: 0;
             top: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0,0,0,0.6);
+            background-color: rgba(0, 0, 0, 0.6);
+            /* Flexbox를 사용한 모달창 중앙 정렬 (가장 안정적인 방식) */
+            display: none; /* 평소에는 숨겨두고, JS로 'flex'로 변경하여 표시 */
             align-items: center;
             justify-content: center;
         }
 
+        /* 모달 내용이 들어가는 흰색 박스 */
         .modal-content {
-            background-color: #fff;
+            background-color: #ffffff;
             padding: 30px;
             border-radius: 10px;
-            width: 80%;
-            max-width: 500px;
+            width: 90%;
+            max-width: 450px;
             text-align: center;
+            position: relative;
             box-shadow: 0 5px 15px rgba(0,0,0,0.3);
         }
-        
-        .modal-content h2 { margin-top: 0; }
-        .modal-content p { font-size: 1.1em; }
 
-        .close-btn {
+        /* 모달 닫기 버튼 (X) */
+        .close-button {
+            color: #aaa;
             position: absolute;
-            top: 15px;
+            top: 10px;
             right: 20px;
-            font-size: 2em;
+            font-size: 28px;
             font-weight: bold;
-            color: #555;
             cursor: pointer;
+            transition: color 0.2s;
         }
 
-        .puzzle-options button {
-            display: block;
-            width: 100%;
+        .close-button:hover,
+        .close-button:focus {
+            color: #333;
+        }
+
+        /* 퀴즈 관련 UI 스타일 */
+        #quiz-question {
+            font-size: 1.4em;
+            margin-bottom: 20px;
+        }
+
+        #quiz-answer {
+            width: calc(100% - 24px); /* padding 값을 고려한 너비 계산 */
             padding: 12px;
-            margin: 10px 0;
+            margin-bottom: 20px;
             font-size: 1em;
-            cursor: pointer;
             border: 1px solid #ccc;
             border-radius: 5px;
-            background-color: #f0f0f0;
         }
-        .puzzle-options button:hover { background-color: #ddd; }
 
-        /* 메모리 카드 게임 스타일 */
-        #memory-game-board {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 10px;
-            margin-top: 20px;
-        }
-        .card {
+        #submit-answer {
             width: 100%;
-            padding-bottom: 100%; /* 정사각형 유지를 위한 트릭 */
-            position: relative;
-            cursor: pointer;
-            transform-style: preserve-3d;
-            transition: transform 0.5s;
-        }
-        .card.flipped, .card.matched { transform: rotateY(180deg); }
-        .card-face {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            backface-visibility: hidden;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 5px;
-            font-size: 0.8em;
-        }
-        .card-front {
-            background-color: #4a90e2;
-            color: white;
-        }
-        .card-back {
-            background-color: #f5a623;
-            color: white;
-            transform: rotateY(180deg);
-        }
-        
-        /* 비밀번호 입력 모달 */
-        #password-input {
-            width: 70%;
-            padding: 15px;
-            font-size: 1.5em;
-            text-align: center;
-            margin: 20px auto;
-            letter-spacing: 0.2em;
-        }
-        #password-submit-btn {
-            width: 75%;
             padding: 12px;
-            font-size: 1.2em;
+            font-size: 1.1em;
             cursor: pointer;
-            background-color: #4CAF50;
+            background-color: #007bff;
             color: white;
             border: none;
             border-radius: 5px;
+            transition: background-color 0.2s;
+        }
+        
+        #submit-answer:hover {
+            background-color: #0056b3;
+        }
+
+        #result-message {
+            margin-top: 20px;
+            font-size: 1.2em;
+            font-weight: bold;
+            min-height: 1.5em; /* 메시지 영역 높이를 확보하여 레이아웃 흔들림 방지 */
         }
     </style>
 </head>
 <body>
 
-    <!-- 게임 화면 -->
+    <!-- 게임 배경 및 클릭 오브젝트가 위치할 컨테이너 -->
     <div id="game-container">
-        <img src="https://i.ibb.co/fVCPV3jd/Whisk-8ad83bd02f.jpg" alt="교실 배경">
-        <!-- 클릭 가능 오브젝트 -->
-        <div class="object" id="monitor" title="모니터"></div>
-        <div class="object" id="speaker" title="벽 스피커"></div>
-        <div class="object" id="clock" title="시계"></div>
-        <div class="object" id="pencil-case" title="필통"></div>
-        <div class="object" id="door" title="교실문"></div>
+        <!-- 각 오브젝트에 quiz-id 데이터를 저장하여 JS에서 사용 -->
+        <div id="obj1" class="clickable-object" data-quiz-key="q1"></div>
+        <div id="obj2" class="clickable-object" data-quiz-key="q2"></div>
+        <div id="obj3" class="clickable-object" data-quiz-key="q3"></div>
     </div>
 
-    <!-- 힌트/문제/미니게임 모달 -->
-    <!-- 1. 시계 (힌트) -->
-    <div id="clock-modal" class="modal">
+    <!-- 퀴즈가 표시될 모달 창 -->
+    <div id="quiz-modal" class="modal">
         <div class="modal-content">
-            <span class="close-btn">×</span>
-            <h2>벽시계</h2>
-            <p>시계가 멈춰있다. 시계 뒷면에 무언가 적혀있다.</p>
-            <p style="font-size: 1.5em; color: red; font-weight: bold;">"탈출 비밀번호의 마지막 숫자는 O와 관련이 깊다."</p>
+            <span id="close-btn" class="close-button">×</span>
+            <p id="quiz-question"></p>
+            <input type="text" id="quiz-answer" placeholder="정답을 입력하세요">
+            <button id="submit-answer">정답 확인</button>
+            <p id="result-message"></p>
         </div>
     </div>
 
-    <!-- 2. 모니터 (문제 1) -->
-    <div id="monitor-modal" class="modal">
-        <div class="modal-content">
-             <span class="close-btn">×</span>
-            <h2>모니터 전원이 켜졌다!</h2>
-            <p><strong>[문제]</strong> 물에 들어가기 전, 심장마비를 예방하고 체온을 적응시키기 위해 최소한 몇 분 동안 준비운동을 하는 것이 좋을까요?</p>
-            <div class="puzzle-options">
-                <button onclick="checkAnswer('monitor', '5분')">1. 5분</button>
-                <button onclick="checkAnswer('monitor', '10분')">2. 10분</button>
-                <button onclick="checkAnswer('monitor', '20분')">3. 20분</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- 3. 스피커 (문제 2) -->
-    <div id="speaker-modal" class="modal">
-        <div class="modal-content">
-             <span class="close-btn">×</span>
-            <h2>스피커에서 안내방송이 나온다.</h2>
-            <p><strong>[문제]</strong> 물에 빠진 사람을 발견했을 때, 가장 먼저 해야 할 위험한 행동은 무엇일까요?</p>
-            <div class="puzzle-options">
-                <button onclick="checkAnswer('speaker', '주변에 알리기')">1. "사람 살려!" 주변에 소리쳐 알린다.</button>
-                <button onclick="checkAnswer('speaker', '도구 던지기')">2. 근처의 튜브나 긴 막대를 던져준다.</button>
-                <button onclick="checkAnswer('speaker', '직접 들어가기')">3. 수영 실력을 믿고 즉시 물에 뛰어든다.</button>
-            </div>
-        </div>
-    </div>
-    
-    <!-- 4. 필통 (미니게임) -->
-    <div id="pencil-case-modal" class="modal">
-        <div class="modal-content">
-             <span class="close-btn">×</span>
-            <h2>물놀이 안전 수칙 카드 맞추기</h2>
-            <p>같은 그림의 카드를 두 개씩 찾아 짝을 맞추세요.</p>
-            <div id="memory-game-board"></div>
-        </div>
-    </div>
-    
-    <!-- 5. 교실문 (비밀번호 입력) -->
-    <div id="door-modal" class="modal">
-        <div class="modal-content">
-             <span class="close-btn">×</span>
-            <h2>탈출</h2>
-            <p>네 자리 비밀번호를 입력하고 문을 여세요.</p>
-            <input type="number" id="password-input" maxlength="4" oninput="this.value=this.value.slice(0,4);">
-            <button id="password-submit-btn">탈출하기</button>
-        </div>
-    </div>
-
-
+    <!-- JavaScript: HTML 파일 내부에 통합 -->
     <script>
-        // 전역 변수 및 상태
-        const finalPassword = "2025";
-        let solvedPuzzles = { monitor: false, speaker: false, clock: false, memoryGame: false };
+        // HTML 문서의 모든 요소가 로드된 후에 스크립트를 실행 (안정성 보장)
+        document.addEventListener('DOMContentLoaded', () => {
 
-        // DOM 요소 가져오기
-        const objects = {
-            monitor: document.getElementById('monitor'),
-            speaker: document.getElementById('speaker'),
-            clock: document.getElementById('clock'),
-            pencilCase: document.getElementById('pencil-case'),
-            door: document.getElementById('door')
-        };
+            // 1. 사용할 HTML 요소들을 미리 변수에 저장 (성능 최적화)
+            const gameContainer = document.getElementById('game-container');
+            const modal = document.getElementById('quiz-modal');
+            const closeButton = document.getElementById('close-btn');
+            const quizQuestionEl = document.getElementById('quiz-question');
+            const quizAnswerInput = document.getElementById('quiz-answer');
+            const submitAnswerButton = document.getElementById('submit-answer');
+            const resultMessageEl = document.getElementById('result-message');
 
-        const modals = {
-            monitor: document.getElementById('monitor-modal'),
-            speaker: document.getElementById('speaker-modal'),
-            clock: document.getElementById('clock-modal'),
-            pencilCase: document.getElementById('pencil-case-modal'),
-            door: document.getElementById('door-modal')
-        };
-        
-        // 모달 닫기 버튼 이벤트
-        document.querySelectorAll('.close-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                btn.closest('.modal').style.display = 'none';
-            });
-        });
-
-        // 오브젝트 클릭 이벤트
-        objects.monitor.addEventListener('click', () => modals.monitor.style.display = 'flex');
-        objects.speaker.addEventListener('click', () => modals.speaker.style.display = 'flex');
-        objects.clock.addEventListener('click', () => {
-            modals.clock.style.display = 'flex';
-            if (!solvedPuzzles.clock) {
-                alert('[힌트 획득] 시계에서 쪽지를 발견했습니다.');
-                solvedPuzzles.clock = true;
-            }
-        });
-        objects.pencilCase.addEventListener('click', () => {
-            modals.pencilCase.style.display = 'flex';
-            if (!solvedPuzzles.memoryGame) {
-                setupMemoryGame();
-            }
-        });
-        objects.door.addEventListener('click', () => modals.door.style.display = 'flex');
-
-        // 문제 정답 확인
-        function checkAnswer(puzzle, answer) {
-            const correctAnswers = {
-                monitor: '10분',
-                speaker: '직접 들어가기'
+            // 2. 퀴즈 데이터 정의 (객체 형식)
+            const quizData = {
+                'q1': { question: '1 + 1 = ?', answer: '2' },
+                'q2': { question: '5 + 100 = ?', answer: '105' },
+                'q3': { question: '1024 + 6 = ?', answer: '1030' }
             };
 
-            if (answer === correctAnswers[puzzle]) {
-                if (!solvedPuzzles[puzzle]) {
-                    let hint = '';
-                    if (puzzle === 'monitor') hint = "비밀번호의 첫 두 자리는 '20' 입니다.";
-                    if (puzzle === 'speaker') hint = "비밀번호의 세 번째 숫자는 두 번째 숫자와 같습니다.";
-                    
-                    alert(`정답입니다! [힌트 획득]\n${hint}`);
-                    solvedPuzzles[puzzle] = true;
+            // 현재 선택된 퀴즈의 정답을 저장할 변수
+            let currentCorrectAnswer = '';
+
+            // 3. 퀴즈 모달을 여는 함수
+            function openQuizModal(quizKey) {
+                const quiz = quizData[quizKey];
+                if (!quiz) return; // 해당하는 퀴즈가 없으면 함수 종료
+
+                // 퀴즈 내용 설정 및 이전 결과 초기화
+                quizQuestionEl.textContent = quiz.question;
+                currentCorrectAnswer = quiz.answer;
+                quizAnswerInput.value = '';
+                resultMessageEl.textContent = '';
+                
+                // 모달을 'flex'로 설정하여 화면에 표시 (CSS에서 flex로 중앙정렬)
+                modal.style.display = 'flex';
+                
+                // (UX 개선) 모달이 열리면 바로 입력창에 포커스
+                quizAnswerInput.focus();
+            }
+
+            // 4. 퀴즈 모달을 닫는 함수
+            function closeQuizModal() {
+                modal.style.display = 'none';
+            }
+
+            // 5. 정답을 확인하는 함수
+            function checkAnswer() {
+                const userAnswer = quizAnswerInput.value.trim(); // 입력값의 앞뒤 공백 제거
+                if (userAnswer === '') return; // 입력값이 없으면 아무것도 안함
+
+                if (userAnswer === currentCorrectAnswer) {
+                    resultMessageEl.textContent = '정답입니다! 🎉';
+                    resultMessageEl.style.color = 'green';
                 } else {
-                    alert('이미 해결한 문제입니다.');
+                    resultMessageEl.textContent = `틀렸어요! 정답은 '${currentCorrectAnswer}'입니다.`;
+                    resultMessageEl.style.color = 'red';
                 }
-                modals[puzzle].style.display = 'none';
-            } else {
-                alert('틀렸습니다. 다시 생각해 보세요.');
             }
-        }
 
-        // 메모리 카드 게임 로직
-        const memoryGameBoard = document.getElementById('memory-game-board');
-        let cardItems = ['구명조끼', '준비운동', '안전요원', '튜브', '체온유지', '심장마비'];
-        let cards = [];
-        let flippedCards = [];
-        let matchedPairs = 0;
-
-        function setupMemoryGame() {
-            matchedPairs = 0;
-            memoryGameBoard.innerHTML = '';
-            let gameCards = [...cardItems.slice(0, 4), ...cardItems.slice(0, 4)];
-            gameCards.sort(() => 0.5 - Math.random());
-
-            gameCards.forEach(item => {
-                const card = document.createElement('div');
-                card.classList.add('card');
-                card.dataset.value = item;
-                
-                const cardFront = document.createElement('div');
-                cardFront.classList.add('card-face', 'card-front');
-                cardFront.textContent = '?';
-                
-                const cardBack = document.createElement('div');
-                cardBack.classList.add('card-face', 'card-back');
-                cardBack.textContent = item;
-                
-                card.appendChild(cardFront);
-                card.appendChild(cardBack);
-                memoryGameBoard.appendChild(card);
-
-                card.addEventListener('click', flipCard);
+            // 6. 이벤트 리스너 설정
+            
+            // (최적화) 이벤트 위임(Event Delegation) 사용
+            // gameContainer에 한 번만 이벤트 리스너를 추가하여 내부의 어떤 오브젝트가 클릭되었는지 확인
+            gameContainer.addEventListener('click', (event) => {
+                // 클릭된 요소가 'clickable-object' 클래스를 가지고 있는지 확인
+                if (event.target.classList.contains('clickable-object')) {
+                    // 클릭된 요소의 'data-quiz-key' 속성 값을 가져옴
+                    const quizKey = event.target.dataset.quizKey;
+                    openQuizModal(quizKey);
+                }
             });
-        }
-        
-        function flipCard() {
-            if (flippedCards.length < 2 && !this.classList.contains('flipped')) {
-                this.classList.add('flipped');
-                flippedCards.push(this);
 
-                if (flippedCards.length === 2) {
-                    setTimeout(checkForMatch, 1000);
+            // '정답 확인' 버튼 클릭 시
+            submitAnswerButton.addEventListener('click', checkAnswer);
+
+            // (UX 개선) 입력창에서 'Enter' 키를 눌렀을 때
+            quizAnswerInput.addEventListener('keypress', (event) => {
+                if (event.key === 'Enter') {
+                    checkAnswer();
                 }
-            }
-        }
-        
-        function checkForMatch() {
-            const [card1, card2] = flippedCards;
-            if (card1.dataset.value === card2.dataset.value) {
-                card1.classList.add('matched');
-                card2.classList.add('matched');
-                card1.removeEventListener('click', flipCard);
-                card2.removeEventListener('click', flipCard);
-                matchedPairs++;
-                if (matchedPairs === 4) {
-                     setTimeout(() => {
-                        alert("미니게임 성공! [힌트 획득]\n비밀번호의 마지막 숫자는 5입니다.");
-                        solvedPuzzles.memoryGame = true;
-                        modals.pencilCase.style.display = 'none';
-                    }, 500);
+            });
+
+            // 닫기(X) 버튼 클릭 시
+            closeButton.addEventListener('click', closeQuizModal);
+
+            // 모달 창 바깥의 어두운 영역을 클릭했을 때
+            modal.addEventListener('click', (event) => {
+                // 클릭된 부분이 모달창 자체가 맞는지 확인 (내용 부분은 닫히지 않음)
+                if (event.target === modal) {
+                    closeQuizModal();
                 }
-            } else {
-                card1.classList.remove('flipped');
-                card2.classList.remove('flipped');
-            }
-            flippedCards = [];
-        }
-
-
-        // 비밀번호 확인 로직
-        document.getElementById('password-submit-btn').addEventListener('click', () => {
-            const inputPassword = document.getElementById('password-input').value;
-            if (inputPassword === finalPassword) {
-                alert('🎉 탈출 성공! 🎉\n축하합니다! 안전한 물놀이 수칙을 모두 배우셨습니다!');
-                modals.door.style.display = 'none';
-            } else {
-                alert('비밀번호가 틀렸습니다. 힌트를 다시 확인해보세요.');
-            }
+            });
         });
-
     </script>
+
 </body>
-</html>
+</html>```
